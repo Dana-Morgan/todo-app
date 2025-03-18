@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TextField, Button, List, ListItem, ListItemText, IconButton } from "@mui/material";
+import { TextField, Button, List, ListItem, ListItemText, IconButton, Checkbox } from "@mui/material";
 import { Edit, Delete, Save } from "@mui/icons-material";
 import axios from 'axios';
 
@@ -27,7 +27,6 @@ const ToDo = () => {
         console.error("Error fetching tasks:", error.response?.data || error.message);
       }
     };
-    
     
     fetchTasks();
   }, []);
@@ -99,6 +98,29 @@ const ToDo = () => {
     }
   };
 
+  const toggleCompletion = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setErrorMessage("You need to log in first.");
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/todo/${id}/completion`,
+        {},
+        { headers: { "Authorization": `Bearer ${token}` } }
+      );
+      
+      setTasks(tasks.map(task => 
+        task.id === id ? { ...task, completed: !task.completed } : task
+      ));
+    } catch (error) {
+      console.error("Error toggling completion:", error);
+      setErrorMessage("Error toggling task completion.");
+    }
+  };
+
   return (
     <div style={{ maxWidth: 400, margin: "auto", textAlign: "center", padding: 20 }}>
       <h2>To-Do List</h2>
@@ -130,7 +152,15 @@ const ToDo = () => {
               </>
             ) : (
               <>
-                <ListItemText primary={task.task} />
+                <Checkbox
+                  checked={task.completed}
+                  onChange={() => toggleCompletion(task.id)}
+                  color="primary"
+                />
+                <ListItemText 
+                  primary={task.task} 
+                  style={{ textDecoration: task.completed ? 'line-through' : 'none' }} 
+                />
                 <IconButton onClick={() => enableEditing(index)} color="primary">
                   <Edit />
                 </IconButton>
