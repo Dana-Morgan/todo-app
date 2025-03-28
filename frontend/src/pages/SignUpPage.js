@@ -12,7 +12,6 @@ const SignUpForm = () => {
   const [csrfToken, setCsrfToken] = useState("");
   const navigate = useNavigate();
 
-  // Fetch CSRF token when component mounts
   useEffect(() => {
     const fetchCsrfToken = async () => {
       try {
@@ -41,7 +40,7 @@ const SignUpForm = () => {
           values,
           {
             headers: { "X-CSRF-Token": csrfToken },
-            withCredentials: true, // Ensure cookies are sent
+            withCredentials: true, 
           }
         );
 
