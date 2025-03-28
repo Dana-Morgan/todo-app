@@ -1,4 +1,13 @@
 const csrf = require('csurf');
 const csrfProtection = csrf({ cookie: true });
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+
+const verifyCsrfToken = (req, res, next) => {
+  csrfProtection(req, res, (err) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired CSRF token' });
+    }
+    next();
+  });
+};
+
+module.exports = { csrfMiddleware: csrfProtection, verifyCsrfToken };

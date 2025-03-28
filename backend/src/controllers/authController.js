@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../models/db');
+const csrfProtection = require('csrf')();  
 
 exports.register = async (req, res) => {
   const { name, email, gender, password, confirmPassword } = req.body;
