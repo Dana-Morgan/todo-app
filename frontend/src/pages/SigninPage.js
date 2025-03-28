@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import { Grid, Paper, Typography, Button } from '@mui/material';
 import AuthFormInputs from '../components/AuthFormInputs'; 
 import { validationSchema } from '../validation/valid';
-import axios from 'axios';
+import api from '../api/axiosConfig'; // استيراد api من ملف axiosConfig
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -18,12 +19,15 @@ const LoginForm = () => {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        console.log('User submitted values:', values);
-        
-        const response = await axios.post('http://localhost:5000/auth/login', values); 
-        console.log('Server Response:', response.data);
-        localStorage.setItem('token', response.data.token); 
-        navigate('/todo'); 
+        const response = await api.post('/auth/login', values, { // استخدام api بدلاً من axios
+          headers: { 
+            'X-CSRF-Token': csrfToken, 
+          },
+        });
+
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('csrfToken', response.data.csrfToken); 
+        navigate('/todo');
       } catch (error) {
         console.error('Error during login:', error.response ? error.response.data : error.message);
       }
@@ -33,6 +37,19 @@ const LoginForm = () => {
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
+
+  const fetchCsrfToken = async () => {
+    try {
+      const response = await api.get('/csrf-token'); // استخدام api بدلاً من axios
+      setCsrfToken(response.data.csrfToken); 
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCsrfToken(); 
+  }, []);
 
   return (
     <Grid container justifyContent="center" alignItems="center" height="100vh">

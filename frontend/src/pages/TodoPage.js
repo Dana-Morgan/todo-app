@@ -1,133 +1,200 @@
 import React, { useState, useEffect } from "react";
-import { TextField, Button, List, ListItem, ListItemText, IconButton, Checkbox } from "@mui/material";
-import { Edit, Delete, Save } from "@mui/icons-material";
-import axios from 'axios';
+import { TextField, Button, List, ListItem, ListItemText, IconButton, Checkbox, Snackbar } from "@mui/material";
+import { Edit, Delete, Save, ExitToApp } from "@mui/icons-material";
+import api from '../api/axiosConfig'; 
+import { useNavigate } from 'react-router-dom';
 
 const ToDo = () => {
   const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");
+  const [newTask, setNewTask] = useState(''); 
   const [editingIndex, setEditingIndex] = useState(null);
-  const [editedTask, setEditedTask] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [editedTask, setEditedTask] = useState(''); 
+  const [errorMessage, setErrorMessage] = useState('');
+  const [csrfToken, setCsrfToken] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar state for error messages
+  const navigate = useNavigate();
+
+  const fetchCsrfToken = async () => {
+    try {
+      const response = await api.get('/csrf-token');
+      setCsrfToken(response.data.csrfToken);
+      localStorage.setItem('csrfToken', response.data.csrfToken);
+      fetchTasks(); // Fetch tasks after getting the CSRF token
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+      setErrorMessage("Failed to fetch CSRF token.");
+      setOpenSnackbar(true); // Show error snackbar
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const csrfToken = localStorage.getItem('csrfToken');
+
+      if (!token || !csrfToken) {
+        return navigate('/');
+      }
+
+      const response = await api.get("/api/todo", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
+        },
+      });
+
+      setTasks(response.data); 
+    } catch (error) {
+      console.error("Error fetching tasks:", error.response?.data || error.message);
+      setErrorMessage("Failed to fetch tasks. Please try again later.");
+      setOpenSnackbar(true); // Show error snackbar
+    }
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          return alert('Please log in first!');
-        }
-    
-        const response = await axios.get("http://localhost:5000/api/todo", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-    
-        setTasks(response.data);
-      } catch (error) {
-        console.error("Error fetching tasks:", error.response?.data || error.message);
-      }
-    };
-    
-    fetchTasks();
+    fetchCsrfToken();
   }, []);
 
   const addTask = async () => {
-    if (newTask.trim() === "") return;
+    if (newTask.trim() === '') return;
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const csrfToken = localStorage.getItem('csrfToken');
+
+      if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
+        setOpenSnackbar(true); // Show error snackbar
         return;
       }
-      const response = await axios.post(
-        "http://localhost:5000/api/todo",   
-        { task: newTask },
-        { headers: { "Authorization": `Bearer ${token}` } }
-      );
-      setTasks([...tasks, response.data]);
-      setNewTask("");
+
+      const response = await api.post("/api/todo", { task: newTask }, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
+        }
+      });
+
+      setTasks(prevTasks => [...prevTasks, response.data]);
+      setNewTask(''); 
     } catch (error) {
       console.error("Error adding task:", error);
-      setErrorMessage("Error adding task.");
+      setErrorMessage("Error adding task. Please try again.");
+      setOpenSnackbar(true); // Show error snackbar
     }
   };
 
   const deleteTask = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const csrfToken = localStorage.getItem('csrfToken');
+
+      if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
+        setOpenSnackbar(true); // Show error snackbar
         return;
       }
-      await axios.delete(`http://localhost:5000/api/todo/${id}`, {
-        headers: { "Authorization": `Bearer ${token}` }
+
+      const response = await api.delete(`/api/todo/${id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
+        }
       });
-      setTasks(tasks.filter(task => task.id !== id));
+
+      if (response.status === 200) {
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+      }
     } catch (error) {
       console.error("Error deleting task:", error);
-      setErrorMessage("Error deleting task.");
+      setErrorMessage("Error deleting task. Please try again.");
+      setOpenSnackbar(true); // Show error snackbar
     }
   };
 
   const enableEditing = (index) => {
     setEditingIndex(index);
-    setEditedTask(tasks[index].task);
+    setEditedTask(tasks[index].task || ''); 
   };
 
   const saveTask = async (id) => {
+    if (editedTask.trim() === '') return;
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const csrfToken = localStorage.getItem('csrfToken');
+
+      if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
+        setOpenSnackbar(true); // Show error snackbar
         return;
       }
+
       const updatedTasks = [...tasks];
       updatedTasks[editingIndex].task = editedTask;
-      setTasks(updatedTasks);
+      setTasks(updatedTasks); 
       setEditingIndex(null);
-      setEditedTask("");
+      setEditedTask(''); 
 
-      await axios.put(
-        `http://localhost:5000/api/todo/${id}`,   
-        { task: editedTask },
-        { headers: { "Authorization": `Bearer ${token}` } }
-      );
+      await api.put(`/api/todo/${id}`, { task: editedTask }, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
+        }
+      });
     } catch (error) {
       console.error("Error saving task:", error);
-      setErrorMessage("Error saving task.");
+      setErrorMessage("Error saving task. Please try again.");
+      setOpenSnackbar(true); // Show error snackbar
     }
   };
 
   const toggleCompletion = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const csrfToken = localStorage.getItem('csrfToken');
+
+      if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
+        setOpenSnackbar(true); // Show error snackbar
         return;
       }
 
-      const response = await axios.put(
-        `http://localhost:5000/api/todo/${id}/completion`,
-        {},
-        { headers: { "Authorization": `Bearer ${token}` } }
-      );
-      
-      setTasks(tasks.map(task => 
+      await api.put(`/api/todo/${id}/completion`, {}, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-CSRF-Token": csrfToken,
+        }
+      });
+
+      setTasks(prevTasks => prevTasks.map(task =>
         task.id === id ? { ...task, completed: !task.completed } : task
       ));
     } catch (error) {
       console.error("Error toggling completion:", error);
-      setErrorMessage("Error toggling task completion.");
+      setErrorMessage("Error toggling task completion. Please try again.");
+      setOpenSnackbar(true); // Show error snackbar
     }
+  };
+
+  const logOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('csrfToken');
+    navigate('/');
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
   };
 
   return (
     <div style={{ maxWidth: 400, margin: "auto", textAlign: "center", padding: 20 }}>
       <h2>To-Do List</h2>
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+      <Button variant="contained" color="secondary" onClick={logOut} fullWidth>
+        <ExitToApp /> Log Out
+      </Button>
+
       <TextField
         label="New Task"
-        value={newTask}
+        value={newTask} 
         onChange={(e) => setNewTask(e.target.value)}
         fullWidth
         margin="normal"
@@ -142,7 +209,7 @@ const ToDo = () => {
             {editingIndex === index ? (
               <>
                 <TextField
-                  value={editedTask}
+                  value={editedTask} 
                   onChange={(e) => setEditedTask(e.target.value)}
                   fullWidth
                 />
@@ -157,9 +224,9 @@ const ToDo = () => {
                   onChange={() => toggleCompletion(task.id)}
                   color="primary"
                 />
-                <ListItemText 
-                  primary={task.task} 
-                  style={{ textDecoration: task.completed ? 'line-through' : 'none' }} 
+                <ListItemText
+                  primary={task.task}
+                  style={{ textDecoration: task.completed ? 'line-through' : 'none' }}
                 />
                 <IconButton onClick={() => enableEditing(index)} color="primary">
                   <Edit />
@@ -172,6 +239,13 @@ const ToDo = () => {
           </ListItem>
         ))}
       </List>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={errorMessage}
+      />
     </div>
   );
 };
