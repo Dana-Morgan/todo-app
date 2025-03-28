@@ -1,6 +1,5 @@
 const pool = require('../models/db');
 
-// CSRF Token Handling
 const csrf = require('csurf');
 const csrfProtection = csrf({ cookie: true });
 
@@ -9,12 +8,10 @@ const app = express();
 app.use(express.json());
 app.use(csrfProtection);
 
-// Get CSRF Token
 app.get('/csrf-token', csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Get all todos for a user
 exports.getTodos = async (req, res) => {
   try {
     const todos = await pool.query("SELECT * FROM todos WHERE user_id = $1", [req.user.userId]);
@@ -25,7 +22,6 @@ exports.getTodos = async (req, res) => {
   }
 };
 
-// Add a new todo for a user
 exports.addTodo = async (req, res) => {
   try {
     const { task } = req.body;
@@ -43,7 +39,6 @@ exports.addTodo = async (req, res) => {
   }
 };
 
-// Delete a todo by its ID
 exports.deleteTodo = async (req, res) => {
   try {
     const { id } = req.params;
@@ -62,7 +57,6 @@ exports.deleteTodo = async (req, res) => {
   }
 };
 
-// Update a todo's task and completion status
 exports.updateTodo = async (req, res) => {
   try {
     const { task, completed } = req.body;
@@ -85,7 +79,6 @@ exports.updateTodo = async (req, res) => {
   }
 };
 
-// Toggle completion status of a todo
 exports.toggleCompletion = async (req, res) => {
   try {
     const { id } = req.params;

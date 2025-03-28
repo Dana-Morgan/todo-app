@@ -11,7 +11,7 @@ const ToDo = () => {
   const [editedTask, setEditedTask] = useState(''); 
   const [errorMessage, setErrorMessage] = useState('');
   const [csrfToken, setCsrfToken] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar state for error messages
+  const [openSnackbar, setOpenSnackbar] = useState(false); 
   const navigate = useNavigate();
 
   const fetchCsrfToken = async () => {
@@ -19,11 +19,11 @@ const ToDo = () => {
       const response = await api.get('/csrf-token');
       setCsrfToken(response.data.csrfToken);
       localStorage.setItem('csrfToken', response.data.csrfToken);
-      fetchTasks(); // Fetch tasks after getting the CSRF token
+      fetchTasks(); 
     } catch (error) {
       console.error("Error fetching CSRF token:", error);
       setErrorMessage("Failed to fetch CSRF token.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true); 
     }
   };
 
@@ -47,7 +47,7 @@ const ToDo = () => {
     } catch (error) {
       console.error("Error fetching tasks:", error.response?.data || error.message);
       setErrorMessage("Failed to fetch tasks. Please try again later.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true); 
     }
   };
 
@@ -63,7 +63,7 @@ const ToDo = () => {
 
       if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
-        setOpenSnackbar(true); // Show error snackbar
+        setOpenSnackbar(true); 
         return;
       }
 
@@ -79,7 +79,7 @@ const ToDo = () => {
     } catch (error) {
       console.error("Error adding task:", error);
       setErrorMessage("Error adding task. Please try again.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true); 
     }
   };
 
@@ -90,7 +90,7 @@ const ToDo = () => {
 
       if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
-        setOpenSnackbar(true); // Show error snackbar
+        setOpenSnackbar(true); 
         return;
       }
 
@@ -107,7 +107,7 @@ const ToDo = () => {
     } catch (error) {
       console.error("Error deleting task:", error);
       setErrorMessage("Error deleting task. Please try again.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true); 
     }
   };
 
@@ -124,7 +124,7 @@ const ToDo = () => {
 
       if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
-        setOpenSnackbar(true); // Show error snackbar
+        setOpenSnackbar(true);
         return;
       }
 
@@ -143,7 +143,7 @@ const ToDo = () => {
     } catch (error) {
       console.error("Error saving task:", error);
       setErrorMessage("Error saving task. Please try again.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true);
     }
   };
 
@@ -154,7 +154,7 @@ const ToDo = () => {
 
       if (!token || !csrfToken) {
         setErrorMessage("You need to log in first.");
-        setOpenSnackbar(true); // Show error snackbar
+        setOpenSnackbar(true); 
         return;
       }
 
@@ -171,7 +171,7 @@ const ToDo = () => {
     } catch (error) {
       console.error("Error toggling completion:", error);
       setErrorMessage("Error toggling task completion. Please try again.");
-      setOpenSnackbar(true); // Show error snackbar
+      setOpenSnackbar(true); 
     }
   };
 

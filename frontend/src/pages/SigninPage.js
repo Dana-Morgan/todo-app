@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import { Grid, Paper, Typography, Button } from '@mui/material';
 import AuthFormInputs from '../components/AuthFormInputs'; 
 import { validationSchema } from '../validation/valid';
-import api from '../api/axiosConfig'; // استيراد api من ملف axiosConfig
+import api from '../api/axiosConfig'; 
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +19,7 @@ const LoginForm = () => {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await api.post('/auth/login', values, { // استخدام api بدلاً من axios
+        const response = await api.post('/auth/login', values, { 
           headers: { 
             'X-CSRF-Token': csrfToken, 
           },
