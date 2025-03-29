@@ -19,11 +19,7 @@ const LoginForm = () => {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await api.post('/auth/login', values, { 
-          headers: { 
-            'X-CSRF-Token': csrfToken, 
-          },
-        });
+        const response = await api.post('/auth/login', values);
 
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('csrfToken', response.data.csrfToken); 
@@ -40,7 +36,7 @@ const LoginForm = () => {
 
   const fetchCsrfToken = async () => {
     try {
-      const response = await api.get('/csrf-token'); // استخدام api بدلاً من axios
+      const response = await api.get('/csrf-token'); 
       setCsrfToken(response.data.csrfToken); 
     } catch (error) {
       console.error("Error fetching CSRF token:", error);
